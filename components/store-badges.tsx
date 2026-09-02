@@ -26,7 +26,7 @@ export default function StoreBadges({
     return (
         <div className="flex flex-wrap gap-3">
             <a
-                href="https://play.google.com"
+                href="https://play.google.com/store/apps/details?id=com.mamacareng.app"
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`flex items-center bg-black transition-opacity hover:opacity-90 ${s.button}`}
@@ -38,7 +38,7 @@ export default function StoreBadges({
                 </span>
             </a>
             <a
-                href="https://www.apple.com/app-store"
+                href="https://apps.apple.com/us/app/mamacare/id6787990356"
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`flex items-center bg-black transition-opacity hover:opacity-90 ${s.button}`}
