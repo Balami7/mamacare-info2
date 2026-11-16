@@ -1,0 +1,614 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MamaCare Technical Documentation</title>
+<meta name="description" content="How MamaCare, a pregnancy and postpartum companion app, is built: team, code bases, architecture, data model, flows and delivery.">
+<style>
+  :root { --ink:#000; --paper:#fff; --mute:#555; --line:#000; --soft:#f4f4f4; }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin:0; background:var(--paper); color:var(--ink); font:16px/1.65 "Segoe UI", system-ui, -apple-system, Arial, sans-serif; }
+  .layout { display:flex; max-width:1180px; margin:0 auto; }
+  nav { position:sticky; top:0; align-self:flex-start; width:260px; height:100vh; overflow:auto; padding:32px 20px 32px 24px; border-right:1px solid var(--line); font-size:13.5px; }
+  nav .brand { font-weight:800; letter-spacing:.04em; text-transform:uppercase; font-size:12px; margin-bottom:14px; }
+  nav a { display:block; color:var(--ink); text-decoration:none; padding:4px 0; }
+  nav a:hover { text-decoration:underline; }
+  nav .n { display:inline-block; width:26px; color:var(--mute); }
+  main { flex:1; min-width:0; padding:48px 40px 96px; max-width:900px; }
+  h1 { font-size:40px; line-height:1.15; margin:0 0 12px; letter-spacing:-.02em; }
+  h2 { font-size:26px; margin:64px 0 8px; padding-top:20px; border-top:2px solid var(--line); letter-spacing:-.01em; }
+  h3 { font-size:18px; margin:32px 0 6px; }
+  p { margin:10px 0; }
+  .lede { font-size:19px; color:#222; max-width:680px; }
+  .meta { color:var(--mute); font-size:13.5px; margin-bottom:28px; }
+  ul, ol { padding-left:22px; } li { margin:4px 0; }
+  code { font-family: Consolas, "SFMono-Regular", Menlo, monospace; font-size:.92em; background:var(--soft); padding:1px 5px; border:1px solid #ddd; }
+  table { width:100%; border-collapse:collapse; margin:14px 0 22px; font-size:14.5px; }
+  th { background:var(--ink); color:var(--paper); text-align:left; padding:8px 10px; font-weight:600; }
+  td { border:1px solid var(--line); padding:8px 10px; vertical-align:top; }
+  tr:nth-child(even) td { background:#fafafa; }
+  .box { border:1.5px solid var(--line); padding:12px 18px; margin:18px 0; background:var(--paper); }
+  .box.soft { background:var(--soft); border-style:dashed; }
+  .fig { margin:22px 0 28px; border:1.5px solid var(--line); padding:14px; background:#fff; overflow-x:auto; }
+  .fig svg { display:block; width:100%; height:auto; min-width:700px; }
+  .cap { font-size:13px; color:var(--mute); margin:8px 0 0; }
+  .toc-table td:first-child { width:48px; font-weight:700; }
+  footer { margin-top:80px; padding-top:18px; border-top:1px solid var(--line); color:var(--mute); font-size:13px; }
+  svg text { font-family:"Segoe UI", Arial, sans-serif; fill:#000; }
+  .b { fill:#fff; stroke:#000; stroke-width:1.6; }
+  .g { fill:#f4f4f4; stroke:#000; stroke-width:1.4; }
+  .d { stroke-dasharray:6 5; }
+  .ln { stroke:#000; stroke-width:1.6; fill:none; marker-end:url(#arr); }
+  .ln2 { stroke:#000; stroke-width:1.6; fill:none; marker-end:url(#arr); marker-start:url(#arr); }
+  .plain { stroke:#000; stroke-width:1.4; fill:none; }
+  .life { stroke:#000; stroke-width:1.2; stroke-dasharray:4 5; }
+  .t { font-size:13.5px; } .tb { font-size:14px; font-weight:700; } .s { font-size:11.5px; fill:#444; } .c { text-anchor:middle; }
+  .inv { fill:#000; } .invt { fill:#fff !important; }
+  @media (max-width: 860px) { nav { display:none; } main { padding:28px 18px 64px; } h1 { font-size:30px; } }
+  @media print { nav { display:none; } main { padding:0; max-width:none; } h2 { page-break-after:avoid; } .fig, table, .box { page-break-inside:avoid; } a { color:#000; text-decoration:none; } }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#000"/></marker>
+</defs></svg>
+
+<div class="layout">
+<nav aria-label="Documentation map">
+  <div class="brand">MamaCare Docs</div>
+  <a href="#overview"><span class="n">1</span>Overview</a>
+  <a href="#map"><span class="n">2</span>Documentation map</a>
+  <a href="#team"><span class="n">3</span>Team and ownership</a>
+  <a href="#codebases"><span class="n">4</span>Code bases</a>
+  <a href="#stack"><span class="n">5</span>Tech stack</a>
+  <a href="#architecture"><span class="n">6</span>Architecture</a>
+  <a href="#decisions"><span class="n">7</span>Architecture decisions</a>
+  <a href="#data-model"><span class="n">8</span>Data model</a>
+  <a href="#app-flow"><span class="n">9</span>App flow</a>
+  <a href="#data-flow"><span class="n">10</span>Data flow</a>
+  <a href="#api"><span class="n">11</span>API design</a>
+  <a href="#security"><span class="n">12</span>Security and privacy</a>
+  <a href="#quality"><span class="n">13</span>Quality and testing</a>
+  <a href="#delivery"><span class="n">14</span>Delivery and operations</a>
+  <a href="#scale"><span class="n">15</span>Performance and scale</a>
+  <a href="#tradeoffs"><span class="n">16</span>Trade-offs and roadmap</a>
+  <a href="#glossary"><span class="n">17</span>Glossary</a>
+</nav>
+
+<main>
+<h1>MamaCare Technical Documentation</h1>
+<p class="lede">How a team of six builds and runs a multilingual pregnancy and postpartum companion for mothers in Nigeria: one mobile and web app, one admin panel, one API and one AI service.</p>
+<p class="meta">Version 1.0 &middot; November 2026 &middot; For engineers, technical partners and anyone who wants to understand how the product is built.</p>
+
+<h2 id="overview">1. Overview</h2>
+<p>MamaCare supports a mother from early pregnancy through the first year with her baby. It runs on Android, iOS and the web, in five languages: English, Yoruba, Igbo, Hausa and Nigerian Pidgin.</p>
+<h3>What the product does</h3>
+<ul>
+  <li><b>Pregnancy mode:</b> week-by-week guidance, a pregnancy overview, narrated audio in her language, walking and exercise, daily goals.</li>
+  <li><b>Postpartum mode:</b> baby growth and measurements, a vaccination schedule, recovery and newborn care. The app switches mode when a mother records her delivery.</li>
+  <li><b>Mama AI:</b> a conversational assistant for text, voice and photo questions, aware of her stage, pregnancy week and language.</li>
+  <li><b>Journal:</b> private memories as text, voice notes and photos.</li>
+  <li><b>Care tools:</b> appointments, medication reminders, weekly summaries and a mental wellbeing check-in.</li>
+  <li><b>Community:</b> discussions, groups, events, polls and private messages between mothers.</li>
+  <li><b>Plans:</b> free features plus Pro and Max subscriptions with a 7-day free trial, and a referral programme.</li>
+</ul>
+<h3>Engineering goals</h3>
+<table>
+  <tr><th style="width:30%">Goal</th><th>What it means in practice</th></tr>
+  <tr><td>Reliable on weak networks</td><td>Request timeouts, safe retries for reads, a visible connectivity notice and local caching of key profile data.</td></tr>
+  <tr><td>Safe with health data</td><td>Server-side access control, minimal location data, short-lived signed media links, AI photos deleted after 24 hours.</td></tr>
+  <tr><td>One team, many surfaces</td><td>One cross-platform app code base, one API and clear ownership per repository.</td></tr>
+  <tr><td>Fast, low-risk releases</td><td>Over-the-air updates for app code, automated deploys for the API and versioned database migrations.</td></tr>
+  <tr><td>Local relevance</td><td>Five languages from the start, local payment and messaging providers, and audio content recorded in each language.</td></tr>
+</table>
+
+<h2 id="map">2. Documentation map</h2>
+<p>Read it top to bottom for the full picture, or jump to the question you have.</p>
+<table class="toc-table">
+  <tr><th>#</th><th>Section</th><th>Answers the question</th></tr>
+  <tr><td>3</td><td><a href="#team">Team and ownership</a></td><td>Who builds what, and why a team of six?</td></tr>
+  <tr><td>4</td><td><a href="#codebases">Code bases</a></td><td>Why four repositories, and how do they fit together?</td></tr>
+  <tr><td>5</td><td><a href="#stack">Tech stack</a></td><td>Which technologies, and where are they used?</td></tr>
+  <tr><td>6</td><td><a href="#architecture">Architecture</a></td><td>What are the moving parts and how are they connected?</td></tr>
+  <tr><td>7</td><td><a href="#decisions">Architecture decisions</a></td><td>Why was each major choice made, and what did it cost?</td></tr>
+  <tr><td>8</td><td><a href="#data-model">Data model</a></td><td>What do we store, and how is it related?</td></tr>
+  <tr><td>9</td><td><a href="#app-flow">App flow</a></td><td>What does a user's journey look like?</td></tr>
+  <tr><td>10</td><td><a href="#data-flow">Data flow</a></td><td>How does data move for a request, an AI question and a purchase?</td></tr>
+  <tr><td>11</td><td><a href="#api">API design</a></td><td>What are the API conventions?</td></tr>
+  <tr><td>12</td><td><a href="#security">Security and privacy</a></td><td>How are users and their data protected?</td></tr>
+  <tr><td>13</td><td><a href="#quality">Quality and testing</a></td><td>How do we know it works?</td></tr>
+  <tr><td>14</td><td><a href="#delivery">Delivery and operations</a></td><td>How does code reach users and stay healthy?</td></tr>
+  <tr><td>15</td><td><a href="#scale">Performance and scale</a></td><td>How far does it scale, and what is next?</td></tr>
+  <tr><td>16</td><td><a href="#tradeoffs">Trade-offs and roadmap</a></td><td>What did we knowingly leave out?</td></tr>
+  <tr><td>17</td><td><a href="#glossary">Glossary</a></td><td>What do the terms mean?</td></tr>
+</table>
+
+<h2 id="team">3. Team and ownership</h2>
+<p>The team has six people. Each role owns a clear area, so every part of the system has one accountable owner and nobody waits on a committee.</p>
+<div class="fig">
+<svg viewBox="0 0 980 270" role="img" aria-label="Team structure: a UI and product manager coordinates two frontend engineers, a backend engineer, a QA engineer and a DevOps engineer">
+  <rect class="inv" x="340" y="12" width="300" height="58"/>
+  <text class="tb c invt" x="490" y="38">UI and Product Manager</text><text class="s c invt" x="490" y="57" style="fill:#fff">scope, design, priorities, acceptance</text>
+  <path class="plain" d="M490 70 V100"/><path class="plain" d="M102 100 H882"/>
+  <path class="ln" d="M102 100 V130"/><path class="ln" d="M297 100 V130"/><path class="ln" d="M492 100 V130"/><path class="ln" d="M687 100 V130"/><path class="ln" d="M882 100 V130"/>
+  <rect class="b" x="10" y="130" width="185" height="110"/><text class="tb c" x="102" y="158">Frontend 1</text><text class="t c" x="102" y="180">Mobile and web app</text><text class="s c" x="102" y="200">Expo, React Native</text><text class="s c" x="102" y="218">iOS, Android, web</text>
+  <rect class="b" x="205" y="130" width="185" height="110"/><text class="tb c" x="297" y="158">Frontend 2</text><text class="t c" x="297" y="180">Admin panel and web</text><text class="s c" x="297" y="200">Next.js, React</text><text class="s c" x="297" y="218">staff tools, site</text>
+  <rect class="b" x="400" y="130" width="185" height="110"/><text class="tb c" x="492" y="158">Backend</text><text class="t c" x="492" y="180">API and AI service</text><text class="s c" x="492" y="200">Spring Boot, FastAPI</text><text class="s c" x="492" y="218">data, payments, rules</text>
+  <rect class="b" x="595" y="130" width="185" height="110"/><text class="tb c" x="687" y="158">QA</text><text class="t c" x="687" y="180">Quality and releases</text><text class="s c" x="687" y="200">test strategy, devices</text><text class="s c" x="687" y="218">regression, sign-off</text>
+  <rect class="b" x="790" y="130" width="185" height="110"/><text class="tb c" x="882" y="158">DevOps</text><text class="t c" x="882" y="180">Infra and delivery</text><text class="s c" x="882" y="200">CI/CD, cloud, monitoring</text><text class="s c" x="882" y="218">security, cost</text>
+</svg>
+<p class="cap">Figure 1. Team structure. The product manager sets scope; each engineer owns one area end to end.</p>
+</div>
+<table>
+  <tr><th>Role</th><th>Owns</th><th>Main repositories</th></tr>
+  <tr><td>UI and Product Manager</td><td>Product scope, user research, UI design and design system, acceptance criteria, release priorities.</td><td>Design files, backlog</td></tr>
+  <tr><td>Frontend engineer 1</td><td>The mobile and web app: screens, navigation, offline behaviour, translations, in-app purchase flow.</td><td><code>mamacare-mobile</code></td></tr>
+  <tr><td>Frontend engineer 2</td><td>The staff admin panel and web deployment: dashboards, content tools, user and subscription management.</td><td><code>mamacare-admin</code>, web hosting</td></tr>
+  <tr><td>Backend engineer</td><td>The API, database schema, business rules, payments and the AI service.</td><td><code>mamacare-server</code>, <code>mamacare-ai</code></td></tr>
+  <tr><td>QA engineer</td><td>Test strategy, automated and exploratory testing, device matrix, release sign-off.</td><td>Tests in every repository</td></tr>
+  <tr><td>DevOps engineer</td><td>Cloud infrastructure, pipelines, secrets, monitoring, backups, cost and capacity.</td><td>Pipeline and infra configuration</td></tr>
+</table>
+<h3>Why this shape</h3>
+<ul>
+  <li><b>Two frontends, one backend:</b> there are two very different clients (a consumer app and a staff tool). One backend engineer keeps business rules in a single place and avoids duplicated logic.</li>
+  <li><b>QA as its own role:</b> a health product needs someone whose only job is to try to break it, across many Android devices and three languages.</li>
+  <li><b>DevOps as its own role:</b> releases, secrets and capacity are where small teams get hurt, so they have a dedicated owner.</li>
+  <li><b>Product and design combined:</b> at this size, one person holding both keeps decisions fast and the interface consistent.</li>
+</ul>
+<h3>Working agreements</h3>
+<ul>
+  <li>Every change is reviewed by someone other than its author before it merges.</li>
+  <li>The API contract is agreed before frontend and backend work starts. It is versioned (<code>/api/v1</code>) and changes are additive by default.</li>
+  <li>A feature is done when it is tested, translated in all five languages, and QA has signed it off.</li>
+  <li>Releases are small and frequent. Anything that touches payments, authentication or health data gets extra review.</li>
+</ul>
+
+<h2 id="codebases">4. Code bases</h2>
+<p>The system lives in four repositories. Each has one owner, one runtime and one deployment path.</p>
+<table>
+  <tr><th>Repository</th><th>What it is</th><th>Runtime</th><th>Deploys to</th></tr>
+  <tr><td><code>mamacare-mobile</code></td><td>The app for Android, iOS and the web, from one code base.</td><td>TypeScript, React Native (Expo)</td><td>App stores, over-the-air updates, web hosting</td></tr>
+  <tr><td><code>mamacare-admin</code></td><td>The staff admin panel: users, content, community moderation, subscriptions, analytics.</td><td>JavaScript, Next.js</td><td>Web hosting</td></tr>
+  <tr><td><code>mamacare-server</code></td><td>The main API and the only service that talks to the main database.</td><td>Java 17, Spring Boot</td><td>Managed container platform</td></tr>
+  <tr><td><code>mamacare-ai</code></td><td>The AI assistant service: prompts, guardrails, conversation memory.</td><td>Python, FastAPI</td><td>Containers (reverse proxy, API, worker, cache, database)</td></tr>
+</table>
+<h3>Why several repositories instead of one</h3>
+<ul>
+  <li><b>Different runtimes and release speeds.</b> The app ships through stores and over-the-air updates, the API ships continuously, the admin panel ships on its own. One repository would force them onto one cadence.</li>
+  <li><b>A security boundary around the AI service.</b> Model provider keys live only in <code>mamacare-ai</code>. The app never talks to it directly.</li>
+  <li><b>Clear ownership.</b> One engineer per repository means no shared, orphaned code.</li>
+  <li><b>Small, fast pipelines.</b> Each repository builds and tests only what it contains.</li>
+</ul>
+<h3>What it costs, and how we manage it</h3>
+<ul>
+  <li><b>Contract drift</b> between app and API. Managed with a versioned API, additive changes and the rule that the server never trusts the client for access decisions.</li>
+  <li><b>Duplicated types</b> across repositories. Accepted: the contract is small and stable, and tooling for sharing types would add more weight than it removes at this size.</li>
+  <li><b>One app code base for three platforms</b> instead of three native apps. Platform-specific code lives in clearly named files (<code>.web.tsx</code> for the web) and stub modules for features the browser lacks.</li>
+</ul>
+
+<h2 id="stack">5. Tech stack</h2>
+<table>
+  <tr><th style="width:20%">Layer</th><th>Technology</th><th style="width:32%">Why</th></tr>
+  <tr><td>Mobile and web app</td><td>TypeScript, React 19, React Native 0.81, Expo SDK 54, Expo Router (file-based navigation), NativeWind (Tailwind styling), i18next, Jest</td><td>One code base for Android, iOS and web; over-the-air updates; strong typing.</td></tr>
+  <tr><td>App services</td><td>Secure on-device storage, push notifications, store billing (expo-iap), Sentry crash reporting, Firebase Analytics, EAS Build and EAS Update</td><td>Mature, maintained modules for the native features a health app needs.</td></tr>
+  <tr><td>Admin panel</td><td>Next.js 14, React 18, Tailwind CSS 3</td><td>Fast to build internal tools; server rendering where useful; independent from the app.</td></tr>
+  <tr><td>Main API</td><td>Java 17, Spring Boot 4, Spring Security, Spring Data JPA (Hibernate), Flyway migrations, JSON Web Tokens, Maven</td><td>Strong typing, mature security and transaction support, excellent testing story.</td></tr>
+  <tr><td>Main database</td><td>MySQL 8 (managed)</td><td>Highly relational data; familiar operations; reliable backups.</td></tr>
+  <tr><td>AI service</td><td>Python, FastAPI, Pydantic, SQLAlchemy, Redis, large language model providers (OpenAI and Gemini)</td><td>The best ecosystem for AI work; async I/O; strict request validation.</td></tr>
+  <tr><td>Integrations</td><td>Apple App Store Server API and Google Play Developer API (subscriptions), Paystack (web payments), Termii (SMS codes), an email provider, Expo Push, object storage for media, an IP geolocation database</td><td>Local payment and messaging providers that work well in Nigeria.</td></tr>
+  <tr><td>Infrastructure</td><td>Google Cloud Run, Cloud SQL, Cloud Build, Artifact Registry; Vercel for the web app; Cloudflare for DNS; Docker and Docker Compose</td><td>Managed, pay-for-use and easy to scale for a small team.</td></tr>
+</table>
+
+<h2 id="architecture">6. Architecture</h2>
+<p>MamaCare is a <b>modular monolith</b> for business logic (one API, organised into feature modules) with <b>one separate service</b> for AI. Clients talk only to the main API. The API is the single source of truth for identity, data and access rules.</p>
+<div class="fig">
+<svg viewBox="0 0 980 600" role="img" aria-label="System architecture: clients call the main API, which uses the database, media storage, the AI service and external services">
+  <rect class="g" x="20" y="30" width="190" height="300"/><text class="tb" x="34" y="52">Clients</text>
+  <rect class="b" x="40" y="70" width="150" height="64"/><text class="tb c" x="115" y="98">Mobile app</text><text class="s c" x="115" y="118">Android, iOS</text>
+  <rect class="b" x="40" y="160" width="150" height="64"/><text class="tb c" x="115" y="188">Web app</text><text class="s c" x="115" y="208">same code base</text>
+  <rect class="b" x="40" y="250" width="150" height="64"/><text class="tb c" x="115" y="278">Admin panel</text><text class="s c" x="115" y="298">staff only</text>
+
+  <rect class="g" x="300" y="30" width="300" height="300"/><text class="tb" x="314" y="52">Main API (managed containers)</text>
+  <rect class="b" x="320" y="66" width="260" height="248"/>
+  <text class="tb c" x="450" y="90">Spring Boot API</text>
+  <text class="s c" x="450" y="118">Authentication and sessions</text>
+  <text class="s c" x="450" y="140">Subscription and access rules</text>
+  <text class="s c" x="450" y="162">Pregnancy, baby and care data</text>
+  <text class="s c" x="450" y="184">Journal, audio and content</text>
+  <text class="s c" x="450" y="206">Community and private chat</text>
+  <text class="s c" x="450" y="228">Payments and store billing</text>
+  <text class="s c" x="450" y="250">Notifications and reminders</text>
+  <text class="s c" x="450" y="272">Admin and reporting</text>
+  <text class="s c" x="450" y="296">AI gateway</text>
+
+  <rect class="g" x="680" y="30" width="280" height="300"/><text class="tb" x="694" y="52">AI service (containers)</text>
+  <rect class="b" x="700" y="66" width="240" height="40"/><text class="t c" x="820" y="91">Reverse proxy (TLS)</text>
+  <rect class="b" x="700" y="118" width="240" height="52"/><text class="tb c" x="820" y="141">FastAPI</text><text class="s c" x="820" y="159">prompts, guardrails, history</text>
+  <rect class="b" x="700" y="182" width="112" height="48"/><text class="t c" x="756" y="211">Worker</text>
+  <rect class="b" x="828" y="182" width="112" height="48"/><text class="t c" x="884" y="211">Redis</text>
+  <rect class="b" x="700" y="242" width="240" height="58"/><text class="t c" x="820" y="268">Conversation database</text><text class="s c" x="820" y="286">separate from the main one</text>
+
+  <path class="ln" d="M190 102 H320"/><path class="ln" d="M190 192 H320"/><path class="ln" d="M190 282 H320"/>
+  <path class="ln" d="M580 144 H700"/><text class="s c" x="640" y="134">internal call</text><text class="s c" x="640" y="170">service key</text>
+
+  <rect class="b" x="300" y="390" width="170" height="56"/><text class="tb c" x="385" y="415">Main database</text><text class="s c" x="385" y="433">managed MySQL</text>
+  <rect class="b" x="490" y="390" width="170" height="56"/><text class="tb c" x="575" y="415">Media storage</text><text class="s c" x="575" y="433">audio, images</text>
+  <rect class="b d" x="700" y="390" width="260" height="56"/><text class="tb c" x="830" y="415">Model providers</text><text class="s c" x="830" y="433">OpenAI, Gemini</text>
+  <path class="ln" d="M385 330 V390"/><path class="ln" d="M575 330 V390"/><path class="ln" d="M830 330 V390"/>
+
+  <rect class="g d" x="20" y="480" width="940" height="92"/><text class="tb" x="34" y="500">External services</text>
+  <rect class="b d" x="40" y="512" width="215" height="48"/><text class="t c" x="147" y="541">Apple and Google billing</text>
+  <rect class="b d" x="265" y="512" width="215" height="48"/><text class="t c" x="372" y="541">Paystack (web payments)</text>
+  <rect class="b d" x="490" y="512" width="215" height="48"/><text class="t c" x="597" y="541">Expo push notifications</text>
+  <rect class="b d" x="715" y="512" width="225" height="48"/><text class="t c" x="827" y="541">Email and SMS providers</text>
+  <path class="ln2" d="M480 330 V480"/>
+</svg>
+<p class="cap">Figure 2. System architecture. Solid boxes are services we run; dashed boxes are third parties.</p>
+</div>
+<h3>Principles</h3>
+<ul>
+  <li><b>The server decides.</b> Access, limits and plan rules are enforced on the API. The app mirrors them for a good experience but is never trusted.</li>
+  <li><b>Stateless API.</b> Any instance can serve any request, so the platform can add or remove instances freely.</li>
+  <li><b>One gateway to AI.</b> The app calls the main API; the API adds trusted context (plan, stage, week, language) and forwards to the AI service. Model keys never leave the AI service.</li>
+  <li><b>Work that can wait, waits.</b> Reminders, summaries, clean-up jobs and AI follow-ups run in the background instead of blocking a request.</li>
+  <li><b>Verify, never assume.</b> Store receipts, store notifications and payment webhooks are checked cryptographically before they change anything.</li>
+</ul>
+
+<h2 id="decisions">7. Architecture decisions</h2>
+<p>The main decisions in a lightweight record format: what we chose, what we considered, why, and what it costs.</p>
+<table>
+  <tr><th style="width:4%">#</th><th style="width:19%">Decision</th><th style="width:19%">Alternatives</th><th>Why</th><th style="width:22%">Trade-off</th></tr>
+  <tr><td>1</td><td>One cross-platform app (Expo, React Native) for Android, iOS and web</td><td>Separate native apps; Flutter</td><td>A team of six cannot maintain three apps. One code base, one set of tests, shared translations.</td><td>Some native features need extra modules; larger app size.</td></tr>
+  <tr><td>2</td><td>Over-the-air updates for app code, store builds only for native changes</td><td>Store release for every change</td><td>Fixes reach users in minutes, not days.</td><td>Native changes still wait for store review.</td></tr>
+  <tr><td>3</td><td>A modular monolith for the main API</td><td>Microservices</td><td>One deploy, real database transactions, no network between modules. Modules are separated by package.</td><td>The API scales as one unit.</td></tr>
+  <tr><td>4</td><td>MySQL (relational)</td><td>Document database</td><td>The data is highly relational (users, records, entitlements). Versioned migrations keep changes safe.</td><td>Vertical scaling first; sharding is not planned.</td></tr>
+  <tr><td>5</td><td>AI as a separate Python service behind the Java API</td><td>Call model providers from the app or from Java</td><td>Keys stay server-side; plan and quota rules live in one place; the Python ecosystem is best for AI work.</td><td>An extra network hop and one more thing to run.</td></tr>
+  <tr><td>6</td><td>Stateless JWT sessions, with token records stored so they can be revoked</td><td>Server sessions; opaque tokens</td><td>Scales horizontally and still supports sign-out and password reset that really end a session.</td><td>A small database lookup per request, reduced by a short cache.</td></tr>
+  <tr><td>7</td><td>Access rules enforced on the server; the app only mirrors them</td><td>Client-side gating</td><td>A modified app cannot unlock paid features.</td><td>Both sides need updating when rules change.</td></tr>
+  <tr><td>8</td><td>Store billing on mobile, Paystack on the web</td><td>One provider everywhere</td><td>Store rules require store billing in the apps; Paystack serves web users and local cards.</td><td>Two payment paths to maintain and reconcile.</td></tr>
+  <tr><td>9</td><td>Free trials configured in the stores</td><td>A custom in-app trial</td><td>The stores handle eligibility and billing; far less code and fraud surface.</td><td>Less flexibility in trial rules.</td></tr>
+  <tr><td>10</td><td>Five languages from day one, with a key per string</td><td>English first, translate later</td><td>The product serves Nigerian mothers in the language they think in. Retrofitting is far costlier.</td><td>Every feature needs translations and native review.</td></tr>
+  <tr><td>11</td><td>Resilient networking before full offline sync</td><td>Offline-first database</td><td>Timeouts, safe retries and a connectivity notice remove most pain at low cost.</td><td>Writes still need a connection.</td></tr>
+  <tr><td>12</td><td>In-process rate limits and caches</td><td>A shared cache in front of the API</td><td>Fewer moving parts at current scale.</td><td>Limits apply per instance; a shared store is on the roadmap.</td></tr>
+  <tr><td>13</td><td>A separate admin panel</td><td>Admin screens inside the app</td><td>Different users, different security needs, independent releases.</td><td>A second front end to maintain.</td></tr>
+</table>
+
+<h2 id="data-model">8. Data model</h2>
+<p>The main database holds about sixty persistent entities, grouped below. Every record that belongs to a user is stored with that user's identifier and filtered by it on every query, so one user can never read another's data.</p>
+<div class="fig">
+<svg viewBox="0 0 980 640" role="img" aria-label="Data model: the user is related to care records, identity and devices, community, commerce, and content">
+  <rect class="inv" x="390" y="268" width="200" height="80"/><text class="tb c invt" x="490" y="302" style="fill:#fff">User</text><text class="s c invt" x="490" y="324" style="fill:#fff">account and profile</text>
+
+  <rect class="b" x="20" y="24" width="250" height="236"/><text class="tb" x="34" y="48">Care records</text>
+  <text class="s" x="34" y="74">PregnancyProfile</text><text class="s" x="34" y="94">PostpartumProfile</text><text class="s" x="34" y="114">BabyMeasurement</text><text class="s" x="34" y="134">Appointment + checklist items</text><text class="s" x="34" y="154">Medication and reminders</text><text class="s" x="34" y="174">Vaccination</text><text class="s" x="34" y="194">WeightLog</text><text class="s" x="34" y="214">DailyGoal</text><text class="s" x="34" y="234">JournalEntry (text, voice, photos)</text>
+
+  <rect class="b" x="20" y="316" width="250" height="124"/><text class="tb" x="34" y="340">Identity and devices</text>
+  <text class="s" x="34" y="366">AuthToken (access and refresh)</text><text class="s" x="34" y="386">Device and push token</text><text class="s" x="34" y="406">Preferences and language</text><text class="s" x="34" y="426">One-time codes (hashed)</text>
+
+  <rect class="b" x="710" y="24" width="250" height="236"/><text class="tb" x="724" y="48">Community</text>
+  <text class="s" x="724" y="74">Discussion and Comment</text><text class="s" x="724" y="94">Group and membership</text><text class="s" x="724" y="114">Event and registration</text><text class="s" x="724" y="134">Poll, Option and Vote</text><text class="s" x="724" y="154">PrivateConversation</text><text class="s" x="724" y="174">PrivateMessage</text><text class="s" x="724" y="194">Moderation records</text><text class="s" x="724" y="214">Community notifications</text>
+
+  <rect class="b" x="710" y="316" width="250" height="144"/><text class="tb" x="724" y="340">Commerce</text>
+  <text class="s" x="724" y="366">Entitlement (plan, source, dates)</text><text class="s" x="724" y="386">StorePurchase (Apple, Google)</text><text class="s" x="724" y="406">Payment (Paystack)</text><text class="s" x="724" y="426">Referral</text><text class="s" x="724" y="446">Usage counters (daily limits)</text>
+
+  <rect class="b" x="350" y="440" width="280" height="150"/><text class="tb" x="364" y="464">Content and AI</text>
+  <text class="s" x="364" y="490">AudioAsset (per week and language)</text><text class="s" x="364" y="510">LearnCard</text><text class="s" x="364" y="530">WeeklySummary</text><text class="s" x="364" y="550">AiImageUpload (deleted after 24 h)</text><text class="s" x="364" y="570">AppSettings, Banner, Campaign</text>
+
+  <path class="plain" d="M390 296 H330 V150 H270"/><text class="s" x="338" y="200">1 : many</text>
+  <path class="plain" d="M390 330 H340 V378 H270"/><text class="s" x="278" y="370">1 : many</text>
+  <path class="plain" d="M590 296 H650 V150 H710"/><text class="s" x="658" y="200">1 : many</text>
+  <path class="plain" d="M590 330 H650 V388 H710"/><text class="s" x="658" y="382">1 : many</text>
+  <path class="plain" d="M490 348 V440"/><text class="s" x="498" y="400">content is read per user</text>
+</svg>
+<p class="cap">Figure 3. Data model overview. Boxes group related entities; the user is the centre of every relationship.</p>
+</div>
+<h3>Modelling rules</h3>
+<ul>
+  <li><b>User-scoped by default.</b> Every personal record carries the owning user and is queried with it.</li>
+  <li><b>Entitlements are the single source of truth for access.</b> A user can hold several entitlements (store subscription, web payment, referral reward, admin grant). The API picks the one in force and exposes it through one access endpoint.</li>
+  <li><b>Money and receipts are append-friendly.</b> Store purchases and payments are kept as records; we store fingerprints of signed receipts rather than the receipts themselves.</li>
+  <li><b>Schema changes are versioned migrations</b> applied automatically at deploy, so every environment has the same shape.</li>
+  <li><b>Personal media is private.</b> Files are served through short-lived signed links, and AI photos are removed after 24 hours.</li>
+</ul>
+
+<h2 id="app-flow">9. App flow</h2>
+<p>The journey from opening the app to using a paid feature. Square boxes are screens or actions, diamonds are decisions.</p>
+<div class="fig">
+<svg viewBox="0 0 980 580" role="img" aria-label="App flow from launch through sign-in and onboarding to the main tabs and the paid-feature gate">
+  <rect class="b" x="20" y="20" width="140" height="44" rx="22"/><text class="t c" x="90" y="47">App opens</text>
+  <path class="ln" d="M160 42 H185"/>
+  <polygon class="b" points="185,42 260,6 335,42 260,78"/><text class="t c" x="260" y="38">Saved</text><text class="t c" x="260" y="54">session?</text>
+
+  <path class="ln" d="M260 78 V110"/><text class="s" x="268" y="98">no</text>
+  <rect class="b" x="170" y="110" width="180" height="44"/><text class="t c" x="260" y="137">Sign in or sign up</text>
+  <path class="ln" d="M260 154 V180"/>
+  <rect class="b" x="170" y="180" width="180" height="44"/><text class="t c" x="260" y="207">Verify one-time code</text>
+  <path class="ln" d="M260 224 V250"/>
+  <rect class="b" x="160" y="250" width="200" height="44"/><text class="t c" x="260" y="277">Set language and due date</text>
+  <path class="ln" d="M360 272 H610 V190"/>
+
+  <path class="ln" d="M335 42 H610 V140"/><text class="s" x="420" y="34">yes</text>
+  <rect class="inv" x="540" y="140" width="140" height="50"/><text class="tb c invt" x="610" y="162" style="fill:#fff">Home</text><text class="s c invt" x="610" y="180" style="fill:#fff">dashboard</text>
+
+  <path class="ln" d="M680 165 H720"/><path class="plain" d="M720 48 V232"/>
+  <path class="ln" d="M720 48 H760"/><path class="ln" d="M720 94 H760"/><path class="ln" d="M720 140 H760"/><path class="ln" d="M720 186 H760"/><path class="ln" d="M720 232 H760"/>
+  <rect class="b" x="760" y="30" width="200" height="36"/><text class="t c" x="860" y="53">Home dashboard</text>
+  <rect class="b" x="760" y="76" width="200" height="36"/><text class="t c" x="860" y="99">Journal (Pro)</text>
+  <rect class="b" x="760" y="122" width="200" height="36"/><text class="t c" x="860" y="145">Mama AI (Pro)</text>
+  <rect class="b" x="760" y="168" width="200" height="36"/><text class="t c" x="860" y="191">Community</text>
+  <rect class="b" x="760" y="214" width="200" height="36"/><text class="t c" x="860" y="237">Profile and referrals</text>
+
+  <path class="ln" d="M650 190 V299"/>
+  <polygon class="b" points="575,335 650,299 725,335 650,371"/><text class="t c" x="650" y="331">Pro</text><text class="t c" x="650" y="347">feature?</text>
+  <path class="ln" d="M725 335 H790"/><text class="s" x="742" y="327">no</text>
+  <rect class="b" x="790" y="317" width="170" height="36"/><text class="t c" x="875" y="340">Opens (free feature)</text>
+  <path class="ln" d="M650 371 V399"/><text class="s" x="658" y="390">yes</text>
+  <polygon class="b" points="575,435 650,399 725,435 650,471"/><text class="t c" x="650" y="431">Has Pro</text><text class="t c" x="650" y="447">or trial?</text>
+  <path class="ln" d="M725 435 H790"/><text class="s" x="742" y="427">yes</text>
+  <rect class="b" x="790" y="417" width="170" height="36"/><text class="t c" x="875" y="440">Feature opens</text>
+  <path class="ln" d="M575 435 H520"/><text class="s" x="540" y="427">no</text>
+  <rect class="b" x="370" y="417" width="150" height="36"/><text class="t c" x="445" y="440">Plans screen</text>
+  <path class="ln" d="M445 453 V500"/>
+  <rect class="b" x="340" y="500" width="210" height="50"/><text class="t c" x="445" y="521">Store purchase</text><text class="s c" x="445" y="539">7-day free trial</text>
+  <path class="ln" d="M550 525 H620"/>
+  <rect class="b" x="620" y="507" width="160" height="36"/><text class="t c" x="700" y="530">Access granted</text>
+  <path class="ln" d="M780 525 H875 V453"/>
+
+  <rect class="g d" x="20" y="340" width="300" height="190"/>
+  <text class="tb" x="36" y="366">Mode switch</text>
+  <text class="s" x="36" y="392">When a mother records her delivery,</text>
+  <text class="s" x="36" y="412">the app changes from pregnancy mode</text>
+  <text class="s" x="36" y="432">(weekly guidance, overview) to</text>
+  <text class="s" x="36" y="452">postpartum mode (baby growth,</text>
+  <text class="s" x="36" y="472">vaccinations, recovery). The AI</text>
+  <text class="s" x="36" y="492">assistant switches with it.</text>
+</svg>
+<p class="cap">Figure 4. App flow. Free features open directly; Pro features check access, and send the user to a free trial if they have none.</p>
+</div>
+<h3>Screens and who can use them</h3>
+<table>
+  <tr><th style="width:26%">Area</th><th>Access</th><th>Notes</th></tr>
+  <tr><td>Dashboard, Community, Profile</td><td>Everyone</td><td>The always-free core.</td></tr>
+  <tr><td>Medications and appointments, with reminders</td><td>Everyone</td><td>Health-related reminders are never locked.</td></tr>
+  <tr><td>Mama AI and Journal</td><td>Pro or Max (7-day free trial)</td><td>Limits scale with the plan.</td></tr>
+  <tr><td>Baby growth, vaccinations, mental wellbeing, walking, goals, weekly summaries</td><td>Pro or Max</td><td>Pregnancy-only and postpartum-only screens appear for the right stage only.</td></tr>
+</table>
+
+<h2 id="data-flow">10. Data flow</h2>
+<h3>10.1 Life of a request</h3>
+<p>Every API request passes the same checks in the same order. A request stops at the first check that fails, so cheap checks run first.</p>
+<div class="fig">
+<svg viewBox="0 0 980 330" role="img" aria-label="Request lifecycle through the API">
+  <text class="s c" x="60" y="48">1</text><text class="s c" x="192" y="48">2</text><text class="s c" x="340" y="48">3</text><text class="s c" x="490" y="48">4</text><text class="s c" x="635" y="48">5</text><text class="s c" x="775" y="48">6</text><text class="s c" x="912" y="48">7</text>
+  <rect class="b" x="10" y="60" width="100" height="56"/><text class="tb c" x="60" y="93">Client</text>
+  <rect class="b" x="135" y="60" width="115" height="56"/><text class="t c" x="192" y="84">TLS and</text><text class="t c" x="192" y="102">routing</text>
+  <rect class="b" x="275" y="60" width="130" height="56"/><text class="t c" x="340" y="84">CORS and</text><text class="t c" x="340" y="102">rate limits</text>
+  <rect class="b" x="430" y="60" width="120" height="56"/><text class="t c" x="490" y="84">Token</text><text class="t c" x="490" y="102">check</text>
+  <rect class="b" x="575" y="60" width="120" height="56"/><text class="t c" x="635" y="84">Access</text><text class="t c" x="635" y="102">gate</text>
+  <rect class="b" x="720" y="60" width="110" height="56"/><text class="t c" x="775" y="93">Controller</text>
+  <rect class="b" x="855" y="60" width="115" height="56"/><text class="t c" x="912" y="93">Service</text>
+  <path class="ln" d="M110 88 H135"/><path class="ln" d="M250 88 H275"/><path class="ln" d="M405 88 H430"/><path class="ln" d="M550 88 H575"/><path class="ln" d="M695 88 H720"/><path class="ln" d="M830 88 H855"/>
+  <rect class="b" x="855" y="190" width="115" height="50"/><text class="t c" x="912" y="220">Repository</text>
+  <rect class="b d" x="855" y="262" width="115" height="44"/><text class="t c" x="912" y="289">Database</text>
+  <path class="ln" d="M912 116 V190"/><path class="ln" d="M912 240 V262"/>
+  <rect class="g d" x="275" y="170" width="130" height="56"/><text class="s c" x="340" y="194">Too many tries:</text><text class="s c" x="340" y="212">429 reply</text>
+  <path class="plain d" d="M340 116 V170"/>
+  <rect class="g d" x="415" y="170" width="150" height="56"/><text class="s c" x="490" y="190">Short-lived cache</text><text class="s c" x="490" y="208">of sign-in lookups</text>
+  <path class="plain d" d="M490 116 V170"/>
+  <rect class="g d" x="575" y="170" width="140" height="56"/><text class="s c" x="645" y="190">Paid feature, no</text><text class="s c" x="645" y="208">plan: 402 reply</text>
+  <path class="plain d" d="M635 116 V170"/>
+  <text class="s" x="10" y="318">The reply travels back along the same path. A failed check ends the request there and returns the matching error.</text>
+</svg>
+<p class="cap">Figure 5. Request lifecycle. Notes below the line show where a request can end early.</p>
+</div>
+
+<h3>10.2 Asking Mama AI</h3>
+<div class="fig">
+<svg viewBox="0 0 980 440" role="img" aria-label="Sequence for a Mama AI question">
+  <rect class="inv" x="40" y="12" width="140" height="38"/><text class="tb c invt" x="110" y="37" style="fill:#fff">App</text>
+  <rect class="inv" x="290" y="12" width="140" height="38"/><text class="tb c invt" x="360" y="37" style="fill:#fff">Main API</text>
+  <rect class="inv" x="550" y="12" width="140" height="38"/><text class="tb c invt" x="620" y="37" style="fill:#fff">AI service</text>
+  <rect class="inv" x="790" y="12" width="140" height="38"/><text class="tb c invt" x="860" y="37" style="fill:#fff">Model</text>
+  <path class="life" d="M110 50 V430"/><path class="life" d="M360 50 V430"/><path class="life" d="M620 50 V430"/><path class="life" d="M860 50 V430"/>
+  <path class="ln" d="M110 100 H360"/><text class="t c" x="235" y="92">1. Question, language, week</text>
+  <rect class="g" x="385" y="116" width="225" height="46"/><text class="s" x="395" y="135">2. Check plan, daily allowance and</text><text class="s" x="395" y="152">rate limit; add trusted context</text>
+  <path class="ln" d="M360 205 H620"/><text class="t c" x="490" y="197">3. Ask (service key)</text>
+  <path class="ln" d="M620 255 H860"/><text class="t c" x="740" y="247">4. Prompt and history</text>
+  <path class="ln" d="M860 300 H620"/><text class="t c" x="740" y="292">5. Answer</text>
+  <path class="ln" d="M620 345 H360"/><text class="t c" x="490" y="337">6. Answer after safety checks</text>
+  <path class="ln" d="M360 390 H110"/><text class="t c" x="235" y="382">7. Answer, usage updated</text>
+</svg>
+<p class="cap">Figure 6. A Mama AI question. The app never contacts the AI service or the model provider directly.</p>
+</div>
+<ul>
+  <li><b>Trusted context</b> (stage, pregnancy week or baby age, language, plan) is added by the API from stored data, not taken from the app.</li>
+  <li><b>Guardrails</b> are part of the prompt: no diagnosis, no prescriptions, and a clear instruction to seek urgent care for danger signs.</li>
+  <li><b>Photos</b> are uploaded to private storage, passed to the model through short-lived links, and deleted after 24 hours.</li>
+</ul>
+
+<h3>10.3 Subscriptions</h3>
+<div class="fig">
+<svg viewBox="0 0 980 520" role="img" aria-label="Sequence for a subscription purchase and renewal">
+  <rect class="inv" x="40" y="12" width="120" height="38"/><text class="tb c invt" x="100" y="37" style="fill:#fff">App</text>
+  <rect class="inv" x="280" y="12" width="120" height="38"/><text class="tb c invt" x="340" y="37" style="fill:#fff">Store</text>
+  <rect class="inv" x="540" y="12" width="120" height="38"/><text class="tb c invt" x="600" y="37" style="fill:#fff">Main API</text>
+  <rect class="inv" x="790" y="12" width="120" height="38"/><text class="tb c invt" x="850" y="37" style="fill:#fff">Database</text>
+  <path class="life" d="M100 50 V510"/><path class="life" d="M340 50 V510"/><path class="life" d="M600 50 V510"/><path class="life" d="M850 50 V510"/>
+  <path class="ln" d="M100 95 H340"/><text class="t c" x="220" y="87">1. Buy (account label)</text>
+  <path class="ln" d="M340 140 H100"/><text class="t c" x="220" y="132">2. Signed transaction</text>
+  <path class="ln" d="M100 185 H600"/><text class="t c" x="350" y="177">3. Send signed transaction</text>
+  <rect class="g" x="620" y="203" width="225" height="46"/><text class="s" x="630" y="222">4. Verify the signature; refuse a</text><text class="s" x="630" y="239">purchase made for another account</text>
+  <path class="ln" d="M600 285 H850"/><text class="t c" x="725" y="277">5. Save entitlement</text>
+  <path class="ln" d="M600 330 H100"/><text class="t c" x="350" y="322">6. Access granted</text>
+  <path class="ln" d="M340 385 H600"/><text class="t c" x="470" y="377">7. Signed renewal or refund</text>
+  <path class="ln" d="M600 430 H850"/><text class="t c" x="725" y="422">8. Update entitlement</text>
+  <path class="ln" d="M100 480 H600"/><text class="t c" x="350" y="472">9. Ask: locked? plan? ends when?</text>
+</svg>
+<p class="cap">Figure 7. Purchase and renewal. Steps 7 and 8 happen without the app, so access stays correct even if the user never reopens it.</p>
+</div>
+<ul>
+  <li><b>Account label:</b> each purchase carries a label tied to one MamaCare account, so a leaked receipt cannot be claimed by someone else.</li>
+  <li><b>Referral rewards:</b> a friend's free trial earns nothing; the person who invited her receives a month of the same plan when the friend's first real payment succeeds.</li>
+  <li><b>Web payments</b> follow the same shape: Paystack confirms the payment to the API, which records it and creates the entitlement.</li>
+</ul>
+
+<h3>10.4 Other flows</h3>
+<table>
+  <tr><th style="width:22%">Flow</th><th>How it works</th></tr>
+  <tr><td>Sign-in and sessions</td><td>Email or phone plus one-time code at sign-up; short-lived access token plus longer-lived refresh token; the app refreshes silently and signing out revokes both on the server.</td></tr>
+  <tr><td>Notifications</td><td>Devices register a push token. The API sends reminders, community alerts and summaries through the push provider; local reminders are also scheduled on the device so they ring without a connection.</td></tr>
+  <tr><td>Media upload</td><td>The app uploads to the API, which validates type and size and stores the file privately. Playback and viewing use short-lived signed links.</td></tr>
+  <tr><td>Content and audio</td><td>Staff upload audio per pregnancy week and language through the admin panel; the app asks for the clip matching the mother's week and language.</td></tr>
+</table>
+
+<h2 id="api">11. API design</h2>
+<table>
+  <tr><th style="width:24%">Topic</th><th>Convention</th></tr>
+  <tr><td>Style</td><td>REST over HTTPS with JSON. Resources are grouped by feature (for example journal, community, appointments).</td></tr>
+  <tr><td>Versioning</td><td>Every route lives under <code>/api/v1</code>. Changes are additive; breaking changes get a new version.</td></tr>
+  <tr><td>Authentication</td><td>Bearer access token on every request except sign-in, sign-up, code verification and signed provider callbacks.</td></tr>
+  <tr><td>Current user</td><td>"Me" endpoints read the user from the token. Clients never send a user identifier for their own data.</td></tr>
+  <tr><td>Errors</td><td>Standard HTTP status codes with a JSON body (<code>title</code>, <code>detail</code>, <code>status</code>). <code>401/403</code> for identity and permission, <code>402</code> for a feature that needs a plan, <code>429</code> for too many requests.</td></tr>
+  <tr><td>Idempotency</td><td>Requests that must not run twice (for example an AI question) carry a client-generated request identifier.</td></tr>
+  <tr><td>Lists</td><td>Paged with <code>page</code> and <code>size</code>; sizes are capped on the server.</td></tr>
+  <tr><td>Webhooks</td><td>Store notifications and payment confirmations are accepted only with a valid signature and ignored otherwise.</td></tr>
+</table>
+<h3>Example: asking what the user can access</h3>
+<p>One small endpoint tells the app everything it needs to decide what to show:</p>
+<div class="box"><code>GET /api/v1/me/access</code><br><code>{ "locked": false, "pro": true, "plan": "PRO", "expires_at": "2026-12-04T12:03:42Z", "source": "APPLE" }</code></div>
+<p class="cap">The app renders from this answer; the server enforces the same rules independently on every protected route.</p>
+
+<h2 id="security">12. Security and privacy</h2>
+<table>
+  <tr><th style="width:24%">Area</th><th>Practice</th></tr>
+  <tr><td>Transport</td><td>HTTPS everywhere with strict transport security. Origins are allow-listed for browser access.</td></tr>
+  <tr><td>Accounts and sessions</td><td>Passwords are stored as salted hashes. One-time codes are stored hashed and expire. Sign-in and code endpoints are rate limited. Signing out or resetting a password revokes sessions on the server.</td></tr>
+  <tr><td>Authorisation</td><td>Role-based access for staff (user, manager, admin). Personal data is always filtered by the owning user. Paid features are enforced on the server.</td></tr>
+  <tr><td>Payments</td><td>Store transactions and notifications are verified with the stores' signatures. Purchases are tied to one account. We keep fingerprints of receipts, not the receipts.</td></tr>
+  <tr><td>Data minimisation</td><td>Only city and state are kept for location, never an exact address, and never shown to other users.</td></tr>
+  <tr><td>Media</td><td>Private storage; short-lived signed links; type and size validation; AI photos deleted after 24 hours.</td></tr>
+  <tr><td>AI safety</td><td>Guardrails against diagnosis and prescriptions; danger signs trigger advice to seek urgent care; content moderation for community posts.</td></tr>
+  <tr><td>Secrets</td><td>Kept in the cloud secret manager and environment configuration, never in source control or in the app.</td></tr>
+  <tr><td>Monitoring</td><td>Crash and error reporting, structured logs and audit lines for sensitive events such as subscription transfers.</td></tr>
+</table>
+
+<h2 id="quality">13. Quality and testing</h2>
+<table>
+  <tr><th style="width:24%">Layer</th><th>What is covered</th></tr>
+  <tr><td>API unit and integration tests</td><td>More than 300 automated tests: business rules, the access gate, authentication and session revocation, store verification, payments, referral rewards, and a full application start-up test on an in-memory database.</td></tr>
+  <tr><td>App tests</td><td>More than 150 automated tests: networking behaviour (timeouts, retries, sign-out rules), access routing, stage rules, translations coverage, notices and icons.</td></tr>
+  <tr><td>AI service tests</td><td>Prompt construction, request validation, language and stage handling.</td></tr>
+  <tr><td>Exploratory and device testing</td><td>Led by QA on a matrix of Android versions, iPhones and browsers, in all five languages, on slow networks.</td></tr>
+  <tr><td>Payment testing</td><td>Store sandbox purchases, trial conversion, renewal, refund and restore for both stores; web payments in the provider's test mode.</td></tr>
+  <tr><td>Release sign-off</td><td>A checklist per release; changes touching payments, sign-in or health data need QA sign-off before they ship.</td></tr>
+</table>
+
+<h2 id="delivery">14. Delivery and operations</h2>
+<div class="fig">
+<svg viewBox="0 0 980 430" role="img" aria-label="Delivery pipelines for the API, the app, the web apps and the AI service">
+  <text class="tb" x="20" y="22">Main API</text>
+  <rect class="b" x="20" y="30" width="120" height="44"/><text class="t c" x="80" y="57">Code change</text>
+  <rect class="b" x="170" y="30" width="150" height="44"/><text class="t c" x="245" y="57">Review and tests</text>
+  <rect class="b" x="350" y="30" width="120" height="44"/><text class="t c" x="410" y="57">Build image</text>
+  <rect class="b" x="500" y="30" width="110" height="44"/><text class="t c" x="555" y="57">Registry</text>
+  <rect class="inv" x="640" y="30" width="140" height="44"/><text class="t c invt" x="710" y="57" style="fill:#fff">New version live</text>
+  <rect class="g d" x="810" y="30" width="150" height="44"/><text class="s c" x="885" y="50">Database migrations</text><text class="s c" x="885" y="65">run at start-up</text>
+  <path class="ln" d="M140 52 H170"/><path class="ln" d="M320 52 H350"/><path class="ln" d="M470 52 H500"/><path class="ln" d="M610 52 H640"/><path class="plain d" d="M780 52 H810"/>
+
+  <text class="tb" x="20" y="102">App: code-only change</text>
+  <rect class="b" x="20" y="110" width="120" height="44"/><text class="t c" x="80" y="137">Code change</text>
+  <rect class="b" x="170" y="110" width="150" height="44"/><text class="t c" x="245" y="137">Review and tests</text>
+  <rect class="b" x="350" y="110" width="170" height="44"/><text class="t c" x="435" y="137">Over-the-air update</text>
+  <rect class="inv" x="550" y="110" width="210" height="44"/><text class="t c invt" x="655" y="137" style="fill:#fff">Users get it on next open</text>
+  <path class="ln" d="M140 132 H170"/><path class="ln" d="M320 132 H350"/><path class="ln" d="M520 132 H550"/>
+
+  <text class="tb" x="20" y="182">App: native change</text>
+  <rect class="b" x="20" y="190" width="120" height="44"/><text class="t c" x="80" y="217">Code change</text>
+  <rect class="b" x="170" y="190" width="150" height="44"/><text class="t c" x="245" y="217">Review and tests</text>
+  <rect class="b" x="350" y="190" width="120" height="44"/><text class="t c" x="410" y="217">Store build</text>
+  <rect class="b" x="500" y="190" width="110" height="44"/><text class="t c" x="555" y="217">Store review</text>
+  <rect class="inv" x="640" y="190" width="140" height="44"/><text class="t c invt" x="710" y="217" style="fill:#fff">Users update</text>
+  <path class="ln" d="M140 212 H170"/><path class="ln" d="M320 212 H350"/><path class="ln" d="M470 212 H500"/><path class="ln" d="M610 212 H640"/>
+
+  <text class="tb" x="20" y="262">Web app and admin panel</text>
+  <rect class="b" x="20" y="270" width="120" height="44"/><text class="t c" x="80" y="297">Code change</text>
+  <rect class="b" x="170" y="270" width="150" height="44"/><text class="t c" x="245" y="297">Review and tests</text>
+  <rect class="b" x="350" y="270" width="120" height="44"/><text class="t c" x="410" y="297">Hosting build</text>
+  <rect class="inv" x="500" y="270" width="110" height="44"/><text class="t c invt" x="555" y="297" style="fill:#fff">Live on CDN</text>
+  <path class="ln" d="M140 292 H170"/><path class="ln" d="M320 292 H350"/><path class="ln" d="M470 292 H500"/>
+
+  <text class="tb" x="20" y="342">AI service</text>
+  <rect class="b" x="20" y="350" width="120" height="44"/><text class="t c" x="80" y="377">Code change</text>
+  <rect class="b" x="170" y="350" width="150" height="44"/><text class="t c" x="245" y="377">Review and tests</text>
+  <rect class="b" x="350" y="350" width="140" height="44"/><text class="t c" x="420" y="377">Container image</text>
+  <rect class="inv" x="520" y="350" width="150" height="44"/><text class="t c invt" x="595" y="377" style="fill:#fff">Containers restart</text>
+  <path class="ln" d="M140 372 H170"/><path class="ln" d="M320 372 H350"/><path class="ln" d="M490 372 H520"/>
+</svg>
+<p class="cap">Figure 8. Delivery pipelines. App code changes reach users without a store review; native changes do not.</p>
+</div>
+<table>
+  <tr><th style="width:24%">Topic</th><th>Approach</th></tr>
+  <tr><td>Environments</td><td>Local development, preview builds for testing, and production. Configuration comes from environment variables and a secret manager.</td></tr>
+  <tr><td>Releases</td><td>Small and frequent. App fixes ship over the air; the API deploys continuously, and a new version only receives traffic once it has started healthy.</td></tr>
+  <tr><td>Database changes</td><td>Versioned migrations that run automatically and fail loudly if something is wrong. Migrations are written to be safe while the previous version is still running.</td></tr>
+  <tr><td>Observability</td><td>Crash reporting in the app, request logs and health checks.</td></tr>
+  <tr><td>Backups</td><td>Automated database backups managed by DevOps.</td></tr>
+  <tr><td>Domains</td><td>Separate hostnames for the API, the web app, the admin panel and the AI service, behind managed certificates.</td></tr>
+</table>
+
+<h2 id="scale">15. Performance and scale</h2>
+<ul>
+  <li><b>Horizontal by design.</b> The API is stateless, so adding instances raises capacity until the database becomes the limit.</li>
+  <li><b>The database is the first bottleneck.</b> We reduce load before adding hardware: a bounded connection pool, a short cache of sign-in lookups (a few seconds), and filtering at the database rather than in code.</li>
+  <li><b>Protecting the user experience.</b> Reads time out and retry once; slow or failing networks show a connectivity notice instead of an endless spinner.</li>
+  <li><b>Heavy work is isolated.</b> AI calls run in their own service with their own queue and database, so a slow model cannot starve the main API.</li>
+  <li><b>Measure, then spend.</b> A repeatable load test runs against a staging copy; capacity decisions follow its results.</li>
+</ul>
+<h3>Scaling path</h3>
+<table>
+  <tr><th style="width:8%">Step</th><th>Change</th><th style="width:34%">Trigger</th></tr>
+  <tr><td>1</td><td>Move the database to a larger dedicated tier</td><td>Database CPU or memory regularly high</td></tr>
+  <tr><td>2</td><td>Share rate limits and caches across instances (Redis)</td><td>More than a few API instances in steady use</td></tr>
+  <tr><td>3</td><td>Add a read replica for reporting and community feeds</td><td>Read traffic dominates database load</td></tr>
+  <tr><td>4</td><td>Split a module into its own service if it needs separate scaling</td><td>A feature's load or release cadence diverges</td></tr>
+</table>
+
+<h2 id="tradeoffs">16. Trade-offs and roadmap</h2>
+<h3>Deliberately left out for now</h3>
+<ul>
+  <li><b>Full offline editing.</b> Reading cached data and a clear connectivity notice come first; queued offline writes need a native storage layer and careful conflict rules.</li>
+  <li><b>A shared cache for rate limits.</b> Limits are per instance today; they become shared when traffic needs it.</li>
+  <li><b>Multi-region hosting.</b> One region keeps the system simple while the audience is concentrated.</li>
+  <li><b>Fully automated translation review.</b> Every language is reviewed by a native speaker before release, which is slower but safer for health content.</li>
+</ul>
+<h3>Roadmap themes</h3>
+<ul>
+  <li>Offline queue for journal, medications and appointments.</li>
+  <li>Native-quality icons and a refreshed visual system across platforms.</li>
+  <li>More languages and more recorded audio per week.</li>
+  <li>Richer postpartum content and tools.</li>
+  <li>Capacity upgrades following load-test results.</li>
+</ul>
+
+<h2 id="glossary">17. Glossary</h2>
+<table>
+  <tr><th style="width:24%">Term</th><th>Meaning</th></tr>
+  <tr><td>Entitlement</td><td>A record that says a user has a plan until a date, and where it came from (store, web payment, referral, admin).</td></tr>
+  <tr><td>Access gate</td><td>The server check that blocks paid features for users without an entitlement.</td></tr>
+  <tr><td>JWT</td><td>JSON Web Token: a signed token that proves who the user is.</td></tr>
+  <tr><td>Refresh token</td><td>A longer-lived token used only to get a new access token.</td></tr>
+  <tr><td>OTA update</td><td>Over-the-air update: new app code delivered without a store release.</td></tr>
+  <tr><td>Modular monolith</td><td>One deployable application organised into well-separated feature modules.</td></tr>
+  <tr><td>Gateway</td><td>A service that receives requests, adds trusted information and forwards them to another service.</td></tr>
+  <tr><td>Guardrail</td><td>A rule in the AI prompt or pipeline that limits what the assistant may say or do.</td></tr>
+  <tr><td>Migration</td><td>A versioned, repeatable change to the database schema.</td></tr>
+  <tr><td>Idempotent</td><td>Safe to repeat: doing it twice has the same effect as doing it once.</td></tr>
+</table>
+
+<footer>MamaCare Technical Documentation &middot; Version 1.0 &middot; November 2026. This document describes design and practice. It contains no credentials, internal addresses or private data.</footer>
+</main>
+</div>
+</body>
+</html>

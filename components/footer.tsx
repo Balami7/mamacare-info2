@@ -24,6 +24,8 @@ const SUPPORT_LINKS = [
     { label: "Privacy Policy", href: "/privacy" },
     { label: "Terms of Use", href: "/terms" },
     { label: "FAQ", href: "/faq" },
+    // A standalone page in public/docs (not a Next.js route), so it is opened with a plain link.
+    { label: "Technical Docs", href: "/docs", plain: true },
 ];
 
 const SOCIALS = [
@@ -93,12 +95,21 @@ export default function Footer() {
                         <ul className="mt-4 flex flex-col items-center space-y-3 sm:items-start">
                             {SUPPORT_LINKS.map((link) => (
                                 <li key={link.href}>
-                                    <Link
-                                        href={link.href}
-                                        className="text-sm text-white/80 transition-colors hover:text-white"
-                                    >
-                                        {link.label}
-                                    </Link>
+                                    {link.plain ? (
+                                        <a
+                                            href={link.href}
+                                            className="text-sm text-white/80 transition-colors hover:text-white"
+                                        >
+                                            {link.label}
+                                        </a>
+                                    ) : (
+                                        <Link
+                                            href={link.href}
+                                            className="text-sm text-white/80 transition-colors hover:text-white"
+                                        >
+                                            {link.label}
+                                        </Link>
+                                    )}
                                 </li>
                             ))}
                         </ul>
