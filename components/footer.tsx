@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { Globe } from "lucide-react";
 import {
     FacebookIcon,
     InstagramIcon,
@@ -141,6 +142,18 @@ export default function Footer() {
                                 <span className="leading-tight">
                                     <span className="block text-[8px] text-white/70">Download on the</span>
                                     <span className="block text-xs font-semibold text-white">App Store</span>
+                                </span>
+                            </a>
+                            <a
+                                href="https://web.mamacareng.com"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex w-36 items-center gap-1.5 rounded-md bg-black px-3 py-1.5 transition-opacity hover:opacity-90"
+                            >
+                                <Globe className="h-4 w-4 shrink-0 text-white" />
+                                <span className="leading-tight">
+                                    <span className="block text-[8px] text-white/70">Open in your browser</span>
+                                    <span className="block text-xs font-semibold text-white">Web App</span>
                                 </span>
                             </a>
                         </div>

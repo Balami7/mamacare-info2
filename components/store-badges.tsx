@@ -1,4 +1,5 @@
 // components/store-badges.tsx
+import { Globe } from "lucide-react";
 import { PlayStoreIcon, AppleIcon } from "./icons";
 
 const SIZES = {
@@ -47,6 +48,18 @@ export default function StoreBadges({
                 <span className="leading-tight">
                     <span className={`block text-white/70 ${s.eyebrow}`}>Download on the</span>
                     <span className={`block font-semibold text-white ${s.label}`}>App Store</span>
+                </span>
+            </a>
+            <a
+                href="https://web.mamacareng.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`flex items-center bg-black transition-opacity hover:opacity-90 ${s.button}`}
+            >
+                <Globe className={`shrink-0 text-white ${s.icon}`} />
+                <span className="leading-tight">
+                    <span className={`block text-white/70 ${s.eyebrow}`}>Open in your browser</span>
+                    <span className={`block font-semibold text-white ${s.label}`}>Web App</span>
                 </span>
             </a>
         </div>
