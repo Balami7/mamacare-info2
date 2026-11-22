@@ -53,7 +53,7 @@ export default function Hero() {
                 </div>
 
                 {/* Right column - phone mockup with screenshot switcher */}
-                <div className="flex flex-col items-center justify-center lg:items-end">
+                <div className="flex flex-col items-center justify-center">
                     <div className="relative rounded-[46px] sm:rounded-[52px] bg-[#111827] p-2.5 sm:p-3 shadow-2xl ring-1 ring-black/10">
                         <div className="relative overflow-hidden rounded-[36px] sm:rounded-[42px] bg-white">
                             <Image
@@ -68,14 +68,14 @@ export default function Hero() {
                         </div>
                     </div>
 
-                    {/* Screenshot switcher pills */}
+                    {/* Screenshot switcher pills centered under the mockup */}
                     <div className="mt-4 flex items-center justify-center gap-1.5 rounded-full bg-white/90 p-1 shadow-sm backdrop-blur-sm border border-emerald-100">
                         {SCREENS.map((screen, idx) => (
                             <button
                                 key={screen.id}
                                 type="button"
                                 onClick={() => setActiveIndex(idx)}
-                                className={`rounded-full px-3 py-1 text-xs font-semibold transition-all cursor-pointer ${
+                                className={`rounded-full px-3.5 py-1 text-xs font-semibold transition-all cursor-pointer ${
                                     activeIndex === idx
                                         ? "bg-[#1A7A4A] text-white shadow-xs"
                                         : "text-gray-600 hover:text-gray-900"
