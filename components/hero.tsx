@@ -8,21 +8,15 @@ import StaggerText from "./stagger-text";
 const SCREENS = [
     {
         id: "home",
-        label: "Home",
+        label: "Light Mode",
         src: "/assets/images/app-screen-home.png",
-        alt: "MamaCare App Home Screen",
+        alt: "MamaCare App Light Mode",
     },
     {
         id: "dark",
         label: "Dark Mode",
         src: "/assets/images/app-screen-dark.png",
         alt: "MamaCare App Dark Mode",
-    },
-    {
-        id: "profile",
-        label: "Profile",
-        src: "/assets/images/app-screen-profile.png",
-        alt: "MamaCare App Profile Screen",
     },
 ];
 
