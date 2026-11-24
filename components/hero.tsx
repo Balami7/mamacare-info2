@@ -4,12 +4,13 @@ import { useState } from "react";
 import Image from "next/image";
 import StoreBadges from "./store-badges";
 import StaggerText from "./stagger-text";
+import PhonePreview from "./phone-preview";
 
 const SCREENS = [
     {
-        id: "web",
-        label: "Live Web App",
-        isWeb: true,
+        id: "preview",
+        label: "Interactive App",
+        isInteractive: true,
     },
     {
         id: "home",
@@ -51,17 +52,12 @@ export default function Hero() {
                     </div>
                 </div>
 
-                {/* Right column - phone mockup with live web app or screenshot switcher */}
+                {/* Right column - phone mockup with interactive dashboard or screenshot switcher */}
                 <div className="flex flex-col items-center justify-center">
                     <div className="relative rounded-[40px] sm:rounded-[46px] lg:rounded-[48px] bg-[#111827] p-2 sm:p-2.5 border border-gray-900">
-                        <div className="relative overflow-hidden rounded-[32px] sm:rounded-[38px] lg:rounded-[40px] bg-white w-[220px] sm:w-[250px] lg:w-[260px] h-[480px] sm:h-[530px]">
-                            {SCREENS[activeIndex].isWeb ? (
-                                <iframe
-                                    src="https://web.mamacareng.com"
-                                    title="MamaCare Live Web App"
-                                    className="w-full h-full border-0"
-                                    loading="lazy"
-                                />
+                        <div className="relative overflow-hidden rounded-[32px] sm:rounded-[38px] lg:rounded-[40px] bg-white w-[230px] sm:w-[260px] lg:w-[270px] h-[500px] sm:h-[550px]">
+                            {SCREENS[activeIndex].isInteractive ? (
+                                <PhonePreview />
                             ) : (
                                 <Image
                                     key={SCREENS[activeIndex].id}
