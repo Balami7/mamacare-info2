@@ -48,15 +48,15 @@ export default function Hero() {
 
                 {/* Right column - phone mockup with screenshot switcher */}
                 <div className="flex flex-col items-center justify-center">
-                    <div className="relative rounded-[46px] sm:rounded-[52px] bg-[#111827] p-2.5 sm:p-3 shadow-2xl ring-1 ring-black/10">
-                        <div className="relative overflow-hidden rounded-[36px] sm:rounded-[42px] bg-white">
+                    <div className="relative rounded-[40px] sm:rounded-[46px] lg:rounded-[48px] bg-[#111827] p-2 sm:p-2.5 shadow-2xl ring-1 ring-black/10">
+                        <div className="relative overflow-hidden rounded-[32px] sm:rounded-[38px] lg:rounded-[40px] bg-white">
                             <Image
                                 key={SCREENS[activeIndex].id}
                                 src={SCREENS[activeIndex].src}
                                 alt={SCREENS[activeIndex].alt}
                                 width={360}
                                 height={780}
-                                className="h-auto w-[220px] sm:w-[280px] lg:w-[310px] object-cover transition-opacity duration-300"
+                                className="h-auto w-[200px] sm:w-[240px] lg:w-[250px] max-h-[540px] object-contain transition-opacity duration-300"
                                 priority
                             />
                         </div>
