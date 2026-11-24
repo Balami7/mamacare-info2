@@ -4,14 +4,8 @@ import { useState } from "react";
 import Image from "next/image";
 import StoreBadges from "./store-badges";
 import StaggerText from "./stagger-text";
-import PhonePreview from "./phone-preview";
 
 const SCREENS = [
-    {
-        id: "preview",
-        label: "Interactive App",
-        isInteractive: true,
-    },
     {
         id: "home",
         label: "Light Mode",
@@ -52,26 +46,23 @@ export default function Hero() {
                     </div>
                 </div>
 
-                {/* Right column - phone mockup with interactive dashboard or screenshot switcher */}
+                {/* Right column - phone mockup with screenshot switcher */}
                 <div className="flex flex-col items-center justify-center">
-                    <div className="relative rounded-[40px] sm:rounded-[46px] lg:rounded-[48px] bg-[#111827] p-2 sm:p-2.5 border border-gray-900">
-                        <div className="relative overflow-hidden rounded-[32px] sm:rounded-[38px] lg:rounded-[40px] bg-white w-[230px] sm:w-[260px] lg:w-[270px] h-[500px] sm:h-[550px]">
-                            {SCREENS[activeIndex].isInteractive ? (
-                                <PhonePreview />
-                            ) : (
-                                <Image
-                                    key={SCREENS[activeIndex].id}
-                                    src={SCREENS[activeIndex].src!}
-                                    alt={SCREENS[activeIndex].alt!}
-                                    fill
-                                    className="object-cover transition-opacity duration-300"
-                                    priority
-                                />
-                            )}
+                    <div className="relative rounded-[40px] sm:rounded-[46px] lg:rounded-[48px] bg-[#111827] p-2 sm:p-2.5 border border-gray-900 shadow-sm">
+                        <div className="relative overflow-hidden rounded-[32px] sm:rounded-[38px] lg:rounded-[40px] bg-white">
+                            <Image
+                                key={SCREENS[activeIndex].id}
+                                src={SCREENS[activeIndex].src}
+                                alt={SCREENS[activeIndex].alt}
+                                width={360}
+                                height={780}
+                                className="h-auto w-[200px] sm:w-[240px] lg:w-[250px] max-h-[540px] object-contain transition-opacity duration-300"
+                                priority
+                            />
                         </div>
                     </div>
 
-                    {/* Switcher pills centered under the mockup */}
+                    {/* Screenshot switcher pills centered under the mockup */}
                     <div className="mt-4 flex items-center justify-center gap-1.5 rounded-full bg-white/90 p-1 shadow-xs border border-emerald-100">
                         {SCREENS.map((screen, idx) => (
                             <button
