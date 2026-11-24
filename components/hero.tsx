@@ -49,7 +49,7 @@ export default function Hero() {
                 {/* Right column - phone mockup with screenshot switcher */}
                 <div className="flex flex-col items-center justify-center">
                     <div className="relative rounded-[40px] sm:rounded-[46px] lg:rounded-[48px] bg-[#111827] p-2 sm:p-2.5 border border-gray-900 shadow-sm">
-                        <div className="relative overflow-hidden rounded-[32px] sm:rounded-[38px] lg:rounded-[40px] bg-white">
+                        <div className={`relative overflow-hidden rounded-[32px] sm:rounded-[38px] lg:rounded-[40px] ${activeIndex === 1 ? "bg-[#0F1512]" : "bg-white"}`}>
                             <Image
                                 key={SCREENS[activeIndex].id}
                                 src={SCREENS[activeIndex].src}
